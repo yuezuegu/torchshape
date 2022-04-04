@@ -14,14 +14,19 @@ How to use:
 3) Call tensorshape function in your code:
 
     ``outshape = tensorshape(op, inshape)``
-    
+
 where op is a torch.nn operation (see the [list](#list-of-supported-operations) of supported operations), inshape and outshape are tuples.
 
 See [lenet.py](lenet.py) for example usage.
 
 ## List of supported operations
+- nn.Conv1d
 - nn.Conv2d
 - nn.Linear
+- nn.MaxPool1d
 - nn.MaxPool2d
+- nn.AvgPool1d
 - nn.AvgPool2d
 - nn.Flatten
+- nn.BatchNorm1d
+- nn.BatchNorm2d
