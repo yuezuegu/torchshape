@@ -13,7 +13,7 @@ from src.torchshape import tensorshape
 class LeNet(nn.Module):
     def __init__(self):
         super(LeNet, self).__init__()
-        image_size = (4,3,32,32)
+        image_size = (4,3,32,32) #(batch_size, in_channels, image_height, image_width)
 
         self.conv1 = nn.Conv2d(3, 6, kernel_size=5)
         out_size = tensorshape(self.conv1, image_size)
