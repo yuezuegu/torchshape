@@ -7,15 +7,45 @@ import math
 def tensorshape_(op, in_shape):
     if isinstance(op, nn.Conv2d):
         return tensorshape_conv(op, in_shape)
+    if isinstance(op, nn.Linear):
+        return tensorshape_linear(op, in_shape)
     elif isinstance(op, nn.BatchNorm2d):
         return in_shape
     elif isinstance(op, nn.ReLU):
         return in_shape
     elif isinstance(op, nn.MaxPool2d) or isinstance(op, nn.AvgPool2d):
         return tensorshape_pooling(op, in_shape)
+    elif isinstance(op, nn.Flatten):
+        return tensorshape_flatten(op, in_shape)
     else:
         Warning ("Operation of type {} is not supported, returning in_shape".format(op.__class__.__name__))
         return in_shape 
+
+def tensorshape_flatten(op, in_shape):
+    start_dim = op.start_dim
+    end_dim = op.end_dim
+
+    out_shape = list(in_shape[0:start_dim])
+
+    tot = 1
+    for s in in_shape[start_dim:end_dim]:
+        tot = tot * s
+    tot = tot * in_shape[end_dim]
+    out_shape += [tot]
+
+    if end_dim != -1:
+        out_shape += in_shape[end_dim+1:]
+
+    return tuple(out_shape)
+
+def tensorshape_linear(op, in_shape):
+    N, Cin = in_shape
+
+    Cout = op.out_features
+
+    assert Cin == op.in_features, "Input channels must be the same: C_weight: {}, C_input: {}".format(op.in_channels, Cin)
+
+    return (N, Cout)
 
 def tensorshape_conv(op, in_shape):
     N, Cin, Hin, Win = in_shape
