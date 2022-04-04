@@ -17,6 +17,8 @@ How to use:
     
 where op is a torch.nn operation (see the [list](#list-of-supported-operations) of supported operations), inshape and outshape are tuples.
 
+See [lenet.py](lenet.py) for example usage.
+
 ## List of supported operations
 - nn.Conv2d
 - nn.Linear
