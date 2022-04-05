@@ -15,7 +15,7 @@ def tensorshape_(op, in_shape):
         return tensorshape_linear(op, in_shape)
     elif isinstance(op, (nn.BatchNorm1d, nn.BatchNorm2d)):
         return in_shape
-    elif isinstance(op, nn.ReLU, nn.Sigmoid, nn.Tanh):
+    elif isinstance(op, (nn.ReLU, nn.Sigmoid, nn.Tanh)):
         return in_shape
     elif isinstance(op, (nn.MaxPool1d, nn.AvgPool1d)):
         return tensorshape_pooling1d(op, in_shape)
