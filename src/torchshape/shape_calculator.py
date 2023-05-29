@@ -11,6 +11,8 @@ def tensorshape_(op, in_shape):
         return tensorshape_conv1d(op, in_shape)
     elif isinstance(op, nn.Conv2d):
         return tensorshape_conv2d(op, in_shape)
+    elif isinstance(op, nn.ConvTranspose2d):
+        return tensorshape_convtranspose2d(op, in_shape)
     elif isinstance(op, nn.Linear):
         return tensorshape_linear(op, in_shape)
     elif isinstance(op, (nn.BatchNorm1d, nn.BatchNorm2d)):
@@ -111,6 +113,31 @@ def tensorshape_conv2d(op, in_shape):
 
         Hout = math.floor( (Hin + 2*padding[0] - dilation[0] * (kernel_size[0]-1) - 1) / stride[0] + 1 )
         Wout = math.floor( (Win + 2*padding[1] - dilation[1] * (kernel_size[1]-1) - 1) / stride[1] + 1 )
+
+    return (N, Cout, Hout, Wout)
+
+def tensorshape_convtranspose2d(op, in_shape):
+    N, Cin, Hin, Win = in_shape
+
+    Cout = op.out_channels
+
+    kernel_size = (op.kernel_size, op.kernel_size) if isinstance(op.kernel_size, int) else op.kernel_size
+
+    dilation = (op.dilation, op.dilation) if isinstance(op.dilation, int) else op.dilation
+    stride = (op.stride, op.stride) if isinstance(op.stride, int) else op.stride
+    padding = (op.padding, op.padding) if isinstance(op.padding, int) else op.padding
+    output_padding = (op.output_padding, op.output_padding) if isinstance(op.output_padding, int) else op.output_padding
+
+    groups = op.groups
+
+    assert op.in_channels % groups == 0, "Cin must be a multiple of groups"
+
+    if groups == 1:
+        assert Cin == groups * op.in_channels, "Input channels must be the same: C_weight: {}, C_input: {}".format(
+            op.in_channels, Cin)
+
+    Hout = (Hin - 1) * stride[0] - 2 * padding[0] + dilation[0] * (kernel_size[0] - 1) + output_padding[0] + 1
+    Wout = (Win - 1) * stride[1] - 2 * padding[1] + dilation[1] * (kernel_size[1] - 1) + output_padding[1] + 1
 
     return (N, Cout, Hout, Wout)
 

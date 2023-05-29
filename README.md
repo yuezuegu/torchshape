@@ -25,6 +25,7 @@ See [lenet.py](lenet.py) for example usage.
 ## List of supported operations
 - nn.Conv1d
 - nn.Conv2d
+- nn.ConvTranspose2d
 - nn.Linear
 - nn.MaxPool1d
 - nn.MaxPool2d
