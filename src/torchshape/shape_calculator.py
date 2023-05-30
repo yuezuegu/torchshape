@@ -11,6 +11,8 @@ def tensorshape_(op, in_shape):
         return tensorshape_conv1d(op, in_shape)
     elif isinstance(op, nn.Conv2d):
         return tensorshape_conv2d(op, in_shape)
+    elif isinstance(op, nn.ConvTranspose2d):
+        return tensorshape_convtranspose2d(op, in_shape)
     elif isinstance(op, nn.Linear):
         return tensorshape_linear(op, in_shape)
     elif isinstance(op, (nn.BatchNorm1d, nn.BatchNorm2d)):
@@ -114,6 +116,31 @@ def tensorshape_conv2d(op, in_shape):
 
     return (N, Cout, Hout, Wout)
 
+def tensorshape_convtranspose2d(op, in_shape):
+    N, Cin, Hin, Win = in_shape
+
+    Cout = op.out_channels
+
+    kernel_size = (op.kernel_size, op.kernel_size) if isinstance(op.kernel_size, int) else op.kernel_size
+
+    dilation = (op.dilation, op.dilation) if isinstance(op.dilation, int) else op.dilation
+    stride = (op.stride, op.stride) if isinstance(op.stride, int) else op.stride
+    padding = (op.padding, op.padding) if isinstance(op.padding, int) else op.padding
+    output_padding = (op.output_padding, op.output_padding) if isinstance(op.output_padding, int) else op.output_padding
+
+    groups = op.groups
+
+    assert op.in_channels % groups == 0, "Cin must be a multiple of groups"
+
+    if groups == 1:
+        assert Cin == groups * op.in_channels, "Input channels must be the same: C_weight: {}, C_input: {}".format(
+            op.in_channels, Cin)
+
+    Hout = (Hin - 1) * stride[0] - 2 * padding[0] + dilation[0] * (kernel_size[0] - 1) + output_padding[0] + 1
+    Wout = (Win - 1) * stride[1] - 2 * padding[1] + dilation[1] * (kernel_size[1] - 1) + output_padding[1] + 1
+
+    return (N, Cout, Hout, Wout)
+
 def tensorshape_pooling1d(op, in_shape):
     N, Cin, Hin = in_shape
 
@@ -203,6 +230,13 @@ class Test(unittest.TestCase):
         y = op(x)
         self.assertEqual(y.shape, tensorshape(op, x.shape))
 
+    def test_convtranspose2d(self):
+        x = torch.rand(size=(32, 100, 224, 224))
+        op = nn.ConvTranspose2d(in_channels=100, out_channels=200, kernel_size=(3, 5), stride=(2, 1), padding=(5, 1),
+                                dilation=(3, 2), groups=4)
+        y = op(x)
+        self.assertEqual(y.shape, tensorshape(op, x.shape))
+
     def test_maxpool1d(self):
         x = torch.rand(size=(32,100,224))
         op = nn.MaxPool1d(kernel_size=(4), stride=(3), padding=(2), dilation=(2))
@@ -224,7 +258,9 @@ class Test(unittest.TestCase):
             nn.ReLU(),
             nn.MaxPool2d(kernel_size=(3,3), stride=(1,1), padding=(1,1), dilation=(1,1)),
             nn.Conv2d(in_channels=200, out_channels=400, kernel_size=(3,3), stride=(1,1), padding=(0,1), dilation=(1,2), groups=1),
-            nn.ReLU()
+            nn.ReLU(),
+            nn.ConvTranspose2d(in_channels=400, out_channels=200, kernel_size=(2,2), stride=(2,2), padding=(0,1), dilation=(1,2), groups=1),
+            nn.ReLU(),
         ) 
 
         y = ops(x)
