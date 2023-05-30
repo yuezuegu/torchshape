@@ -230,6 +230,13 @@ class Test(unittest.TestCase):
         y = op(x)
         self.assertEqual(y.shape, tensorshape(op, x.shape))
 
+    def test_convtranspose2d(self):
+        x = torch.rand(size=(32, 100, 224, 224))
+        op = nn.ConvTranspose2d(in_channels=100, out_channels=200, kernel_size=(3, 5), stride=(2, 1), padding=(5, 1),
+                                dilation=(3, 2), groups=4)
+        y = op(x)
+        self.assertEqual(y.shape, tensorshape(op, x.shape))
+
     def test_maxpool1d(self):
         x = torch.rand(size=(32,100,224))
         op = nn.MaxPool1d(kernel_size=(4), stride=(3), padding=(2), dilation=(2))
@@ -251,7 +258,9 @@ class Test(unittest.TestCase):
             nn.ReLU(),
             nn.MaxPool2d(kernel_size=(3,3), stride=(1,1), padding=(1,1), dilation=(1,1)),
             nn.Conv2d(in_channels=200, out_channels=400, kernel_size=(3,3), stride=(1,1), padding=(0,1), dilation=(1,2), groups=1),
-            nn.ReLU()
+            nn.ReLU(),
+            nn.ConvTranspose2d(in_channels=400, out_channels=200, kernel_size=(2,2), stride=(2,2), padding=(0,1), dilation=(1,2), groups=1),
+            nn.ReLU(),
         ) 
 
         y = ops(x)
